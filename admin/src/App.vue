@@ -1,5 +1,8 @@
 <template>
   <div class="app-container">
+    <audio ref="bgMusic" loop preload="auto">
+      <source src="/bgmusic.mp3" type="audio/mpeg">
+    </audio>
     <router-view />
 
     <el-dialog 
@@ -21,21 +24,65 @@
         </el-button>
       </template>
     </el-dialog>
+
+    <!-- 音乐控制按钮 -->
+    <div class="music-control" @click="toggleMusic" :title="isPlaying ? '暂停音乐' : '播放音乐'">
+      <span v-if="isPlaying">🎵</span>
+      <span v-else>🔇</span>
+    </div>
   </div>
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick } from 'vue'
+import { ref, onMounted, nextTick, provide } from 'vue'
 
+const bgMusic = ref(null)
+const isPlaying = ref(false)
 const showWelcome = ref(false)
 const WELCOME_SHOWN_KEY = 'icy_welcome_shown'
+const MUSIC_PLAYING_KEY = 'icy_music_playing'
+
+function playMusic() {
+  if (bgMusic.value) {
+    bgMusic.value.play().then(() => {
+      isPlaying.value = true
+      localStorage.setItem(MUSIC_PLAYING_KEY, 'true')
+    }).catch(() => {
+      localStorage.setItem(MUSIC_PLAYING_KEY, 'false')
+    })
+  }
+}
+
+function pauseMusic() {
+  if (bgMusic.value) {
+    bgMusic.value.pause()
+    isPlaying.value = false
+    localStorage.setItem(MUSIC_PLAYING_KEY, 'false')
+  }
+}
+
+function toggleMusic() {
+  if (isPlaying.value) {
+    pauseMusic()
+  } else {
+    playMusic()
+  }
+}
 
 function closeWelcome() {
   showWelcome.value = false
   localStorage.setItem(WELCOME_SHOWN_KEY, Date.now().toString())
+  playMusic()
 }
 
+provide('playMusic', playMusic)
+provide('isPlaying', isPlaying)
+
 onMounted(async () => {
+  if (bgMusic.value) {
+    bgMusic.value.volume = 0.3
+  }
+  
   await nextTick()
   
   const lastWelcome = localStorage.getItem(WELCOME_SHOWN_KEY)
@@ -44,6 +91,11 @@ onMounted(async () => {
   
   if (showAgain) {
     showWelcome.value = true
+  } else {
+    const wasPlaying = localStorage.getItem(MUSIC_PLAYING_KEY) === 'true'
+    if (wasPlaying) {
+      playMusic()
+    }
   }
 })
 </script>
@@ -117,6 +169,30 @@ html, body {
   transform: scale(1.05);
 }
 
+/* 音乐控制按钮 */
+.music-control {
+  position: fixed;
+  bottom: 20px;
+  right: 20px;
+  width: 50px;
+  height: 50px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4af37 0%, #b8960c 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 24px;
+  cursor: pointer;
+  z-index: 9999;
+  box-shadow: 0 4px 15px rgba(212, 175, 55, 0.4);
+  transition: all 0.3s ease;
+}
+
+.music-control:hover {
+  transform: scale(1.1);
+  box-shadow: 0 6px 20px rgba(212, 175, 55, 0.6);
+}
+
 /* 全局手机端适配 */
 @media screen and (max-width: 768px) {
   .welcome-dialog .el-dialog {
@@ -147,6 +223,14 @@ html, body {
     font-size: 16px !important;
     padding: 14px 40px !important;
     letter-spacing: 2px !important;
+  }
+
+  .music-control {
+    width: 40px;
+    height: 40px;
+    font-size: 20px;
+    bottom: 15px;
+    right: 15px;
   }
 
   /* Element Plus 组件适配 */
