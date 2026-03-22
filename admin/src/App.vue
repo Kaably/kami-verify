@@ -1,8 +1,5 @@
 <template>
   <div class="app-container">
-    <audio ref="bgMusic" loop preload="auto">
-      <source src="/bgmusic.mp3" type="audio/mpeg">
-    </audio>
     <router-view />
 
     <el-dialog 
@@ -28,37 +25,17 @@
 </template>
 
 <script setup>
-import { ref, onMounted, nextTick, watch } from 'vue'
+import { ref, onMounted, nextTick } from 'vue'
 
-const bgMusic = ref(null)
-const isPlaying = ref(false)
 const showWelcome = ref(false)
-
-const MUSIC_PLAYING_KEY = 'icy_music_playing'
 const WELCOME_SHOWN_KEY = 'icy_welcome_shown'
-
-function playMusic() {
-  if (bgMusic.value) {
-    bgMusic.value.play().then(() => {
-      isPlaying.value = true
-      localStorage.setItem(MUSIC_PLAYING_KEY, 'true')
-    }).catch(() => {
-      localStorage.setItem(MUSIC_PLAYING_KEY, 'false')
-    })
-  }
-}
 
 function closeWelcome() {
   showWelcome.value = false
   localStorage.setItem(WELCOME_SHOWN_KEY, Date.now().toString())
-  playMusic()
 }
 
 onMounted(async () => {
-  if (bgMusic.value) {
-    bgMusic.value.volume = 0.3
-  }
-  
   await nextTick()
   
   const lastWelcome = localStorage.getItem(WELCOME_SHOWN_KEY)
@@ -67,17 +44,6 @@ onMounted(async () => {
   
   if (showAgain) {
     showWelcome.value = true
-  } else {
-    const wasPlaying = localStorage.getItem(MUSIC_PLAYING_KEY) === 'true'
-    if (wasPlaying) {
-      playMusic()
-    }
-  }
-})
-
-watch(isPlaying, (val) => {
-  if (val) {
-    localStorage.setItem(MUSIC_PLAYING_KEY, 'true')
   }
 })
 </script>
