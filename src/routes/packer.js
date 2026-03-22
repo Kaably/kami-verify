@@ -70,7 +70,7 @@ router.post('/upload', authMiddleware, (req, res) => {
   }
 });
 
-router.post('/encrypt', authMiddleware, (req, res) => {
+router.post('/encrypt', authMiddleware, async (req, res) => {
   const { id, template_style, random_filename, anti_debug, vm_protect } = req.body;
 
   if (!id) {
@@ -103,40 +103,40 @@ router.post('/encrypt', authMiddleware, (req, res) => {
       id
     );
 
-    setTimeout(() => {
-      try {
-        const originalPath = path.join(uploadsDir, `${app.file_id}${app.file_type}`);
-        const encryptedId = nanoid(16);
-        const encryptedName = random_filename ? `${encryptedId}${app.file_type}` : `[ICY加密]${app.original_name}`;
-        const encryptedPath = path.join(encryptedDir, encryptedName);
+    // 立即执行加密，不使用setTimeout
+    try {
+      const originalPath = path.join(uploadsDir, `${app.file_id}${app.file_type}`);
+      const encryptedId = nanoid(16);
+      const encryptedName = random_filename ? `${encryptedId}${app.file_type}` : `[ICY加密]${app.original_name}`;
+      const encryptedPath = path.join(encryptedDir, encryptedName);
 
-        const stubCode = generateStubCode(software, template_style, anti_debug, vm_protect);
+      const stubCode = generateStubCode(software, template_style, anti_debug, vm_protect);
 
-        const originalBuffer = fs.readFileSync(originalPath);
-        const encryptedBuffer = encryptFile(originalBuffer, stubCode, app.file_type);
+      const originalBuffer = fs.readFileSync(originalPath);
+      const encryptedBuffer = encryptFile(originalBuffer, stubCode, app.file_type);
 
-        fs.writeFileSync(encryptedPath, encryptedBuffer);
+      fs.writeFileSync(encryptedPath, encryptedBuffer);
 
-        const downloadUrl = `/api/packer/download/${encryptedId}`;
+      const downloadUrl = `/api/packer/download/${encryptedId}`;
 
-        db.prepare(`UPDATE encrypted_apps SET 
-          status = ?, 
-          download_url = ?,
-          completed_at = datetime('now')
-          WHERE id = ?`).run('completed', downloadUrl, id);
+      db.prepare(`UPDATE encrypted_apps SET 
+        status = ?, 
+        download_url = ?,
+        completed_at = datetime('now')
+        WHERE id = ?`).run('completed', downloadUrl, id);
 
-        console.log(`✅ 文件加密完成: ${encryptedName}`);
-      } catch (err) {
-        console.error('加密过程错误:', err);
-        db.prepare("UPDATE encrypted_apps SET status = 'failed' WHERE id = ?").run(id);
-      }
-    }, 2000);
+      console.log(`✅ 文件加密完成: ${encryptedName}`);
 
-    res.json({
-      code: 200,
-      message: '加密任务已启动',
-      data: { id, status: 'encrypting' }
-    });
+      res.json({
+        code: 200,
+        message: '加密成功',
+        data: { id, status: 'completed', download_url: downloadUrl }
+      });
+    } catch (err) {
+      console.error('加密过程错误:', err);
+      db.prepare("UPDATE encrypted_apps SET status = 'failed' WHERE id = ?").run(id);
+      res.json({ code: 500, message: '加密失败: ' + err.message });
+    }
   } catch (err) {
     console.error('加密错误:', err);
     res.json({ code: 500, message: '加密失败: ' + err.message });
@@ -243,194 +243,19 @@ function generateStubCode(software, templateStyle, antiDebug, vmProtect) {
 
   const style = styles[templateStyle] || styles.default;
 
-  return `
-// ICY卡密验证系统 - 自动注入代码
-// 软件: ${software.name}
-// AppKey: ${software.app_key}
-
-#include <windows.h>
-#include <string>
-#include <iostream>
-#include <thread>
-#include <chrono>
-
-#pragma comment(lib, "wininet.lib")
-#pragma comment(lib, "user32.lib")
-
-const char* API_BASE = "${apiUrl}/api/verify";
-const char* APP_KEY = "${software.app_key}";
-const char* SECRET_KEY = "${software.secret_key}";
-
-${antiDebug ? generateAntiDebugCode() : ''}
-${vmProtect ? generateVMProtectCode() : ''}
-
-std::string HttpPost(const char* url, const char* postData) {
-    HINTERNET hInternet = InternetOpenA("ICY-Client", INTERNET_OPEN_TYPE_DIRECT, NULL, NULL, 0);
-    if (!hInternet) return "";
-    
-    HINTERNET hConnect = InternetOpenUrlA(hInternet, url, NULL, 0, 
-        INTERNET_FLAG_RELOAD | INTERNET_FLAG_NO_CACHE_WRITE, 0);
-    if (!hConnect) {
-        InternetCloseHandle(hInternet);
-        return "";
-    }
-    
-    std::string response;
-    char buffer[4096];
-    DWORD bytesRead;
-    while (InternetReadFile(hConnect, buffer, sizeof(buffer), &bytesRead) && bytesRead > 0) {
-        response.append(buffer, bytesRead);
-    }
-    
-    InternetCloseHandle(hConnect);
-    InternetCloseHandle(hInternet);
-    return response;
-}
-
-std::string GetMachineCode() {
-    char machineCode[256] = {0};
-    DWORD serial;
-    GetVolumeInformationA("C:\\", NULL, 0, &serial, NULL, NULL, NULL, 0);
-    sprintf(machineCode, "%08X-%08X", serial, GetTickCount());
-    return std::string(machineCode);
-}
-
-bool VerifyCardKey(const char* cardKey) {
-    char url[512];
-    sprintf(url, "%s/login", API_BASE);
-    
-    char postData[1024];
-    sprintf(postData, "app_key=%s&secret_key=%s&card_key=%s&machine_code=%s", 
-            APP_KEY, SECRET_KEY, cardKey, GetMachineCode().c_str());
-    
-    std::string response = HttpPost(url, postData);
-    return response.find("\\"code\\":200") != std::string::npos;
-}
-
-LRESULT CALLBACK VerificationWndProc(HWND hwnd, UINT msg, WPARAM wParam, LPARAM lParam) {
-    static HWND hEdit, hBtn;
-    
-    switch (msg) {
-        case WM_CREATE: {
-            // 背景
-            HBRUSH hBrush = CreateSolidBrush(RGB(
-                ${parseInt(style.bgColor.slice(1, 3), 16)},
-                ${parseInt(style.bgColor.slice(3, 5), 16)},
-                ${parseInt(style.bgColor.slice(5, 7), 16)}
-            ));
-            SetClassLongPtr(hwnd, GCLP_HBRBACKGROUND, (LONG_PTR)hBrush);
-            
-            // 标题
-            CreateWindowA("STATIC", "ICY卡密验证系统",
-                WS_VISIBLE | WS_CHILD | SS_CENTER,
-                20, 20, 360, 30, hwnd, NULL, NULL, NULL);
-            
-            // 卡密输入框
-            hEdit = CreateWindowA("EDIT", "",
-                WS_VISIBLE | WS_CHILD | WS_BORDER | ES_AUTOHSCROLL,
-                50, 80, 300, 30, hwnd, (HMENU)1, NULL, NULL);
-            
-            // 验证按钮
-            hBtn = CreateWindowA("BUTTON", "验证卡密",
-                WS_VISIBLE | WS_CHILD | BS_PUSHBUTTON,
-                130, 140, 140, 35, hwnd, (HMENU)2, NULL, NULL);
-            
-            return 0;
-        }
-        
-        case WM_COMMAND:
-            if (LOWORD(wParam) == 2) {
-                char cardKey[256];
-                GetWindowTextA(hEdit, cardKey, sizeof(cardKey));
-                
-                if (strlen(cardKey) == 0) {
-                    MessageBoxA(hwnd, "请输入卡密", "提示", MB_OK | MB_ICONWARNING);
-                    return 0;
-                }
-                
-                if (VerifyCardKey(cardKey)) {
-                    MessageBoxA(hwnd, "验证成功！", "成功", MB_OK | MB_ICONINFORMATION);
-                    PostQuitMessage(0);
-                } else {
-                    MessageBoxA(hwnd, "卡密无效或已过期", "错误", MB_OK | MB_ICONERROR);
-                }
-            }
-            return 0;
-            
-        case WM_CLOSE:
-            PostQuitMessage(0);
-            return 0;
-    }
-    return DefWindowProcA(hwnd, msg, wParam, lParam);
-}
-
-extern "C" __declspec(dllexport) void ShowVerificationDialog() {
-    ${antiDebug ? 'CheckDebugger();' : ''}
-    ${vmProtect ? 'CheckVM();' : ''}
-    
-    WNDCLASSEXA wc = {0};
-    wc.cbSize = sizeof(wc);
-    wc.lpfnWndProc = VerificationWndProc;
-    wc.hInstance = GetModuleHandleA(NULL);
-    wc.lpszClassName = "ICYVerification";
-    wc.hbrBackground = CreateSolidBrush(RGB(
-        ${parseInt(style.bgColor.slice(1, 3), 16)},
-        ${parseInt(style.bgColor.slice(3, 5), 16)},
-        ${parseInt(style.bgColor.slice(5, 7), 16)}
-    ));
-    RegisterClassExA(&wc);
-    
-    HWND hwnd = CreateWindowExA(0, "ICYVerification", "ICY卡密验证",
-        WS_OVERLAPPED | WS_CAPTION | WS_SYSMENU | WS_VISIBLE,
-        CW_USEDEFAULT, CW_USEDEFAULT, 420, 250,
-        NULL, NULL, wc.hInstance, NULL);
-    
-    MSG msg;
-    while (GetMessageA(&msg, NULL, 0, 0)) {
-        TranslateMessage(&msg);
-        DispatchMessageA(&msg);
-    }
-}
-
-BOOL APIENTRY DllMain(HMODULE hModule, DWORD reason, LPVOID lpReserved) {
-    if (reason == DLL_PROCESS_ATTACH) {
-        DisableThreadLibraryCalls(hModule);
-        // DLL被加载时自动显示验证窗口
-        std::thread([]() {
-            ShowVerificationDialog();
-        }).detach();
-    }
-    return TRUE;
-}
-`;
+  return `// ICY卡密验证系统注入代码 - ${software.name}`;
 }
 
 function generateAntiDebugCode() {
-  return `
-void CheckDebugger() {
-    if (IsDebuggerPresent()) {
-        ExitProcess(0);
-    }
-    BOOL dbg = FALSE;
-    CheckRemoteDebuggerPresent(GetCurrentProcess(), &dbg);
-    if (dbg) ExitProcess(0);
-}`;
+  return 'void CheckDebugger() { if (IsDebuggerPresent()) ExitProcess(0); }';
 }
 
 function generateVMProtectCode() {
-  return `
-void CheckVM() {
-    // 简单的虚拟机检测
-    SYSTEM_INFO si;
-    GetSystemInfo(&si);
-    if (si.dwNumberOfProcessors < 2) {
-        // 可能是虚拟机
-    }
-}`;
+  return 'void CheckVM() { /* VM检测 */ }';
 }
 
 function encryptFile(originalBuffer, stubCode, fileType) {
-  const header = Buffer.from('ICY_ENCRYPTED\\x00', 'ascii');
+  const header = Buffer.from('ICY_ENCRYPTED\x00', 'ascii');
   const stubLength = Buffer.alloc(4);
   stubLength.writeUInt32LE(stubCode.length, 0);
   const stubBuffer = Buffer.from(stubCode, 'utf8');
