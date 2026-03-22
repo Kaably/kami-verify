@@ -7,7 +7,6 @@ data/*.db-shm
 *.log
 uploads/
 encrypted/
-*.mp3
 *.exe
 *.dll
 admin/node_modules/
