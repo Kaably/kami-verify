@@ -14,7 +14,6 @@ const routes = [
     children: [
       { path: 'dashboard', name: 'Dashboard', component: () => import('../views/Dashboard.vue') },
       { path: 'software', name: 'Software', component: () => import('../views/Software.vue') },
-      { path: 'packer', name: 'Packer', component: () => import('../views/Packer.vue') },
       { path: 'cards', name: 'Cards', component: () => import('../views/Cards.vue') },
       { path: 'users', name: 'Users', component: () => import('../views/Users.vue') },
       { path: 'logs', name: 'Logs', component: () => import('../views/Logs.vue') },

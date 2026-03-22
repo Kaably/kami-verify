@@ -9,14 +9,13 @@ const verifyRoutes = require('./routes/verify');
 const userRoutes = require('./routes/users');
 const logRoutes = require('./routes/logs');
 const configRoutes = require('./routes/config');
-const packerRoutes = require('./routes/packer');
 
 const app = express();
 const PORT = process.env.PORT || 3000;
 
 app.use(cors());
-app.use(express.json());
-app.use(express.urlencoded({ extended: true }));
+app.use(express.json({ limit: '100mb' }));
+app.use(express.urlencoded({ extended: true, limit: '100mb' }));
 
 const apiLimiter = rateLimit({
   windowMs: 60 * 1000,
@@ -32,7 +31,6 @@ app.use('/api/verify', verifyRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api/logs', logRoutes);
 app.use('/api/config', configRoutes);
-app.use('/api/packer', packerRoutes);
 
 app.use((err, req, res, next) => {
   console.error(err.stack);

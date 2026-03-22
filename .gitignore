@@ -5,4 +5,12 @@ data/*.db-shm
 .DS_Store
 .env
 *.log
-dist/
+uploads/
+encrypted/
+*.mp3
+*.exe
+*.dll
+admin/node_modules/
+admin/dist/
+packer-sdk/
+card-verify-sdk/

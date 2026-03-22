@@ -128,11 +128,11 @@ async function initDatabase() {
     )
   `);
 
-  const adminResult = db.exec("SELECT id FROM admins WHERE username = 'icy666'");
+  const adminResult = db.exec("SELECT id FROM admins WHERE username = 'icy'");
   if (adminResult.length === 0 || adminResult[0].values.length === 0) {
     const hashedPassword = bcrypt.hashSync('cc020818', 10);
-    db.run(`INSERT INTO admins (username, password, role) VALUES (?, ?, ?)`, ['icy666', hashedPassword, 'super_admin']);
-    console.log('✅ 默认管理员账号已创建: icy666 / cc020818');
+    db.run(`INSERT INTO admins (username, password, role) VALUES (?, ?, ?)`, ['icy', hashedPassword, 'super_admin']);
+    console.log('✅ 默认管理员账号已创建: icy / cc020818');
   }
 
   saveDatabase();
@@ -152,8 +152,10 @@ function prepare(sql) {
   return {
     run: function(...params) {
       db.run(sql, params);
+      const lastId = getLastInsertRowId();
+      const changes = db.getRowsModified();
       saveDatabase();
-      return { changes: db.getRowsModified(), lastInsertRowid: getLastInsertRowId() };
+      return { changes: changes, lastInsertRowid: lastId };
     },
     get: function(...params) {
       const stmt = db.prepare(sql);
