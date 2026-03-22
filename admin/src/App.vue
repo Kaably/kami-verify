@@ -116,4 +116,99 @@ html, body {
   box-shadow: 0 0 30px rgba(255, 105, 180, 0.6) !important;
   transform: scale(1.05);
 }
+
+/* 全局手机端适配 */
+@media screen and (max-width: 768px) {
+  .welcome-dialog .el-dialog {
+    width: 90% !important;
+    max-width: 400px !important;
+    margin: 10vh auto !important;
+    border-radius: 15px !important;
+  }
+
+  .welcome-dialog .el-dialog__body {
+    padding: 30px 20px 20px !important;
+  }
+
+  .welcome-dialog .el-dialog__footer {
+    padding: 0 20px 25px !important;
+  }
+
+  .welcome-icon {
+    font-size: 50px;
+    margin-bottom: 15px;
+  }
+
+  .welcome-main-title {
+    font-size: 20px;
+  }
+
+  .welcome-btn {
+    font-size: 16px !important;
+    padding: 14px 40px !important;
+    letter-spacing: 2px !important;
+  }
+
+  /* Element Plus 组件适配 */
+  .el-table {
+    font-size: 12px !important;
+  }
+
+  .el-button {
+    padding: 8px 15px !important;
+  }
+
+  .el-input__inner {
+    font-size: 14px !important;
+  }
+
+  .el-dialog {
+    width: 90% !important;
+    max-width: 400px !important;
+  }
+
+  .el-form-item__label {
+    font-size: 13px !important;
+  }
+
+  .el-pagination {
+    flex-wrap: wrap;
+    justify-content: center;
+  }
+
+  .el-pagination .el-pagination__sizes,
+  .el-pagination .el-pagination__jump {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .welcome-dialog .el-dialog {
+    width: 95% !important;
+    max-width: 350px !important;
+    margin: 5vh auto !important;
+  }
+
+  .welcome-icon {
+    font-size: 40px;
+  }
+
+  .welcome-main-title {
+    font-size: 16px;
+  }
+
+  .welcome-btn {
+    font-size: 14px !important;
+    padding: 12px 30px !important;
+  }
+
+  .el-table {
+    font-size: 11px !important;
+  }
+
+  .el-button--small {
+    padding: 6px 10px !important;
+    font-size: 12px !important;
+  }
+}
 </style>

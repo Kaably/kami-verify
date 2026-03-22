@@ -1,6 +1,21 @@
 <template>
   <div class="layout-container">
-    <div class="sidebar">
+    <!-- 移动端顶部导航 -->
+    <div class="mobile-header" v-if="isMobile">
+      <button class="menu-toggle" @click="sidebarOpen = !sidebarOpen">
+        <span class="menu-icon-bar"></span>
+        <span class="menu-icon-bar"></span>
+        <span class="menu-icon-bar"></span>
+      </button>
+      <div class="mobile-title">ICY卡密验证系统</div>
+      <div class="mobile-user">{{ authStore.admin?.username?.charAt(0)?.toUpperCase() || 'A' }}</div>
+    </div>
+
+    <!-- 遮罩层 -->
+    <div class="sidebar-overlay" v-if="isMobile && sidebarOpen" @click="sidebarOpen = false"></div>
+
+    <!-- 侧边栏 -->
+    <div :class="['sidebar', { 'sidebar-open': sidebarOpen }]">
       <div class="sidebar-header">
         <div class="logo-area">
           <span class="logo-icon">🔐</span>
@@ -10,7 +25,7 @@
       <div class="sidebar-menu">
         <div v-for="item in menuItems" :key="item.path" 
              :class="['menu-item', { active: $route.path === item.path }]"
-             @click="$router.push(item.path)">
+             @click="handleMenuClick(item.path)">
           <span class="menu-icon">{{ item.emoji }}</span>
           <span class="menu-text">{{ item.title }}</span>
           <span v-if="$route.path === item.path" class="active-indicator"></span>
@@ -28,7 +43,7 @@
     </div>
     
     <div class="main-content">
-      <div class="header">
+      <div class="header" v-if="!isMobile">
         <div class="header-left">
           <span class="page-title">{{ currentPageTitle }}</span>
           <span class="header-time">{{ currentTime }}</span>
@@ -57,6 +72,8 @@ import { useAuthStore } from '../stores/auth'
 const router = useRouter()
 const authStore = useAuthStore()
 const currentTime = ref('')
+const isMobile = ref(false)
+const sidebarOpen = ref(false)
 
 const menuItems = [
   { path: '/dashboard', title: '控制台', emoji: '📊' },
@@ -82,15 +99,32 @@ function updateTime() {
   currentTime.value = `${hours}:${minutes}:${seconds}`
 }
 
+function checkMobile() {
+  isMobile.value = window.innerWidth <= 768
+  if (!isMobile.value) {
+    sidebarOpen.value = false
+  }
+}
+
+function handleMenuClick(path) {
+  router.push(path)
+  if (isMobile.value) {
+    sidebarOpen.value = false
+  }
+}
+
 onMounted(() => {
   updateTime()
   timeInterval = setInterval(updateTime, 1000)
+  checkMobile()
+  window.addEventListener('resize', checkMobile)
 })
 
 onUnmounted(() => {
   if (timeInterval) {
     clearInterval(timeInterval)
   }
+  window.removeEventListener('resize', checkMobile)
 })
 
 function handleLogout() {
@@ -128,7 +162,7 @@ function handleLogout() {
   display: flex;
   flex-direction: column;
   position: relative;
-  z-index: 1;
+  z-index: 100;
 }
 
 .sidebar-header {
@@ -342,5 +376,131 @@ function handleLogout() {
   font-size: 12px;
   border-top: 1px solid rgba(212, 175, 55, 0.1);
   background: rgba(10, 10, 10, 0.5);
+}
+
+/* 移动端样式 */
+.mobile-header {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  height: 50px;
+  background: linear-gradient(135deg, #0f0f0f 0%, #1a1a1a 100%);
+  border-bottom: 1px solid rgba(212, 175, 55, 0.3);
+  z-index: 200;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 15px;
+}
+
+.menu-toggle {
+  width: 40px;
+  height: 40px;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  display: flex;
+  flex-direction: column;
+  justify-content: center;
+  align-items: center;
+  gap: 5px;
+}
+
+.menu-icon-bar {
+  width: 24px;
+  height: 2px;
+  background: #d4af37;
+  border-radius: 2px;
+  transition: all 0.3s ease;
+}
+
+.mobile-title {
+  color: #d4af37;
+  font-size: 16px;
+  font-weight: 600;
+}
+
+.mobile-user {
+  width: 32px;
+  height: 32px;
+  border-radius: 50%;
+  background: linear-gradient(135deg, #d4af37 0%, #b8960c 100%);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  color: #000;
+  font-weight: 700;
+  font-size: 14px;
+}
+
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(0, 0, 0, 0.7);
+  z-index: 99;
+}
+
+/* 手机端适配 */
+@media screen and (max-width: 768px) {
+  .mobile-header {
+    display: flex;
+  }
+
+  .sidebar-overlay {
+    display: block;
+  }
+
+  .sidebar {
+    position: fixed;
+    top: 0;
+    left: -260px;
+    height: 100vh;
+    transition: left 0.3s ease;
+    z-index: 100;
+  }
+
+  .sidebar-open {
+    left: 0;
+  }
+
+  .main-content {
+    padding-top: 50px;
+  }
+
+  .header {
+    display: none;
+  }
+
+  .content-area {
+    padding: 15px;
+  }
+
+  .footer {
+    padding: 10px 15px;
+    font-size: 11px;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .content-area {
+    padding: 10px;
+  }
+
+  .sidebar-header h3 {
+    font-size: 13px;
+  }
+
+  .menu-item {
+    padding: 12px 15px;
+  }
+
+  .menu-text {
+    font-size: 13px;
+  }
 }
 </style>

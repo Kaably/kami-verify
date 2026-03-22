@@ -307,4 +307,77 @@ async function handleLogin() {
   color: #333;
   font-size: 12px;
 }
+
+/* 手机端适配 */
+@media screen and (max-width: 768px) {
+  .login-box {
+    width: 90%;
+    max-width: 380px;
+    padding: 30px 20px;
+    margin: 10px;
+    border-radius: 15px;
+  }
+
+  .logo-section {
+    margin-bottom: 25px;
+  }
+
+  .logo-icon {
+    font-size: 40px;
+    margin-bottom: 10px;
+  }
+
+  .login-title {
+    font-size: 22px;
+    letter-spacing: 2px;
+  }
+
+  .login-subtitle {
+    font-size: 10px;
+  }
+
+  .login-form {
+    margin-bottom: 20px;
+  }
+
+  .login-features {
+    gap: 15px;
+    flex-wrap: wrap;
+  }
+
+  .feature-item {
+    font-size: 11px;
+  }
+
+  .feature-icon {
+    font-size: 20px;
+  }
+
+  .particles {
+    display: none;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .login-box {
+    width: 95%;
+    padding: 25px 15px;
+  }
+
+  .logo-icon {
+    font-size: 35px;
+  }
+
+  .login-title {
+    font-size: 18px;
+  }
+
+  .login-features {
+    gap: 10px;
+  }
+
+  .feature-item {
+    font-size: 10px;
+  }
+}
 </style>

@@ -593,4 +593,187 @@ onUnmounted(() => {
 :deep(.el-table__body tr:hover > td.el-table__cell) {
   background: rgba(212, 175, 55, 0.1) !important;
 }
+
+/* 手机端适配 */
+@media screen and (max-width: 768px) {
+  .welcome-section {
+    flex-direction: column;
+    padding: 25px 20px;
+    text-align: center;
+    gap: 20px;
+  }
+
+  .welcome-text {
+    flex-direction: column;
+    gap: 10px;
+  }
+
+  .welcome-icon {
+    font-size: 40px;
+  }
+
+  .welcome-text h1 {
+    font-size: 22px;
+  }
+
+  .welcome-text p {
+    font-size: 12px;
+  }
+
+  .welcome-time {
+    text-align: center;
+  }
+
+  .time-display {
+    font-size: 32px;
+  }
+
+  .date-display {
+    font-size: 12px;
+  }
+
+  .stat-cards {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+
+  .stat-card {
+    padding: 15px;
+    flex-direction: column;
+    text-align: center;
+  }
+
+  .stat-icon {
+    width: 50px;
+    height: 50px;
+    margin-right: 0;
+    margin-bottom: 10px;
+  }
+
+  .icon-emoji {
+    font-size: 24px;
+  }
+
+  .stat-value {
+    font-size: 28px;
+  }
+
+  .stat-title {
+    font-size: 12px;
+  }
+
+  .stat-trend {
+    display: none;
+  }
+
+  .content-section {
+    grid-template-columns: 1fr;
+    gap: 15px;
+  }
+
+  .section-card {
+    padding: 15px;
+  }
+
+  .section-header h3 {
+    font-size: 14px;
+  }
+
+  .card-stats {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+    margin-bottom: 15px;
+  }
+
+  .card-stat-item {
+    padding: 15px 10px;
+  }
+
+  .stat-circle {
+    width: 60px;
+    height: 60px;
+    font-size: 16px;
+    margin-bottom: 10px;
+  }
+
+  .stat-label {
+    font-size: 12px;
+  }
+
+  .usage-bar {
+    flex-direction: column;
+    gap: 10px;
+    padding: 12px;
+  }
+
+  .bar-label {
+    font-size: 12px;
+  }
+
+  .bar-percent {
+    font-size: 12px;
+  }
+
+  :deep(.el-table) {
+    font-size: 12px;
+  }
+
+  :deep(.el-table__body-wrapper) {
+    overflow-x: auto;
+  }
+}
+
+@media screen and (max-width: 480px) {
+  .welcome-section {
+    padding: 20px 15px;
+  }
+
+  .welcome-icon {
+    font-size: 35px;
+  }
+
+  .welcome-text h1 {
+    font-size: 18px;
+  }
+
+  .time-display {
+    font-size: 26px;
+  }
+
+  .stat-cards {
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  .stat-card {
+    padding: 12px;
+  }
+
+  .stat-icon {
+    width: 40px;
+    height: 40px;
+  }
+
+  .icon-emoji {
+    font-size: 20px;
+  }
+
+  .stat-value {
+    font-size: 22px;
+  }
+
+  .section-card {
+    padding: 12px;
+  }
+
+  .card-stats {
+    gap: 8px;
+  }
+
+  .stat-circle {
+    width: 50px;
+    height: 50px;
+    font-size: 14px;
+  }
+}
 </style>
